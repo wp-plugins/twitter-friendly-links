@@ -4,13 +4,14 @@ Plugin Name: Twitter Friendly Links
 Plugin URI: http://kovshenin.com/wordpress/plugins/twitter-friendly-links/
 Description: Twitter Friendly Links
 Author: Konstantin Kovshenin
-Version: 0.1
+Version: 0.2
 Author URI: http://kovshenin.com/
 
 */
 
 add_action('template_redirect', 'twitter_friendly_links');
 add_action("admin_menu", "twitter_friendly_links_menu");
+add_action("admin_menu", "twitter_friendly_links_box");
 
 function twitter_friendly_links() {
 	$options = get_option("twitter_friendly_links");
@@ -134,4 +135,72 @@ function twitter_friendly_links_options() {
 </table>
 </div>
 <?
+}
+
+function twitter_friendly_links_box() {
+	if (function_exists("add_meta_box")) {
+		add_meta_box("twitter_friendly_id", "Twitter Stuff", "twitter_friendly_links_inner_box", "post", "side");
+	}
+	else {
+		add_action("dbx_post_advanced", "twitter_friendly_links_old_box");
+	}
+}
+
+function twitter_friendly_links_old_box() {
+	echo '<div class="dbx-b-ox-wrapper">' . "\n";
+	echo '<fieldset id="twitter_friendly_fieldsetid" class="dbx-box">' . "\n";
+	echo '<div class="dbx-h-andle-wrapper"><h3 class="dbx-handle">' . 
+	      "Twitter Friendly" . "</h3></div>";   
+	echo '<div class="dbx-c-ontent-wrapper"><div class="dbx-content">';
+	twitter_friendly_links_inner_box();
+	echo "</div></div></fieldset></div>\n";
+}
+
+function twitter_friendly_links_inner_box($post) {
+	if ($post->post_status != "publish") {
+		echo "<p>Please publish to get Twitter links.</p>";
+		return;
+	}
+	
+	$options = get_option("twitter_friendly_links");
+	$style = $options["style"];
+	
+	$post_id = $post->ID;
+	
+	$friendly_link = get_option("siteurl") . "/" . $style . $post_id;
+	$title_length = utf8_strlen($post->post_title);
+	$link_length = utf8_strlen($friendly_link);
+	$overall_length = $title_length + $link_length;
+	$excess = 140 - $overall_length;
+	
+	if ($excess < 0) {
+		$excess *= -1;
+		$title = mb_substr($post->post_title,0,$title_length-($excess+4),'UTF-8') . "... ";
+	}
+	else {
+		$title = $post->post_title . " ";
+	}
+	
+	echo "<p><strong>Friendly link:</strong> <a href=\"{$friendly_link}\">{$friendly_link}</a></p>";
+	echo "<p><strong>Tweet:</strong> {$title}<a href=\"{$friendly_link}\">{$friendly_link}</a></p>";
+	echo "<p style=\"text-align: right;\"><strong><a href=\"http://twitter.com/home/?status=" . urlencode($title) . urlencode($friendly_link) . "\">Tweet this</a> &raquo;</strong></p>";
+}
+
+if (!function_exists("utf8_strlen")) {
+	function utf8_strlen($s) {
+	    $c = strlen($s); $l = 0;
+	    for ($i = 0; $i < $c; ++$i) if ((ord($s[$i]) & 0xC0) != 0x80) ++$l;
+	    return $l;
+	}
+}
+
+function twitter_link() {
+	global $post;
+	$options = get_option("twitter_friendly_links");
+	$style = $options["style"];
+	$post_id = $post->ID;
+	
+	$friendly_link = get_option("siteurl") . "/" . $style . $post_id;
+	
+	return $friendly_link;
 }
