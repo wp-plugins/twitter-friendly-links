@@ -16,7 +16,7 @@ The plugin creates a shorter link for every blog post, so instead of `http://kov
 
 If you'd like to participate in the plugin development feel free to contact me, I'll be glad to share some thoughts and guide you into the current development stage..
 
-And YES, I do consider feature requests, and that is what makes this plugin work. The discussions go here: [Quick Flickr Widget](http://kovshenin.com/wordpress/plugins/twitter-friendly-links/ "Twitter Friendly Links")
+And YES, I do consider feature requests, and that is what makes this plugin work. The discussions go here: [Twitter Friendly Links](http://kovshenin.com/wordpress/plugins/twitter-friendly-links/ "Twitter Friendly Links")
 
 == Installation ==
 
