@@ -19,7 +19,7 @@ The plugin creates a shorter link for every blog post, so instead of `http://kov
 * You can output the twitter friendly link in your themes using the `twitter_link()` function
 * More coming up soon!
 
-YES, I do consider feature requests, and that is what makes this plugin work. The discussions go here: [Quick Flickr Widget](http://kovshenin.com/wordpress/plugins/twitter-friendly-links/ "Twitter Friendly Links")
+YES, I do consider feature requests, and that is what makes this plugin work. The discussions go here: [Twitter Friendly Links](http://kovshenin.com/wordpress/plugins/twitter-friendly-links/ "Twitter Friendly Links")
 
 == Installation ==
 
