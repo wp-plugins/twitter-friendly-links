@@ -10,7 +10,7 @@ Your very own TinyURL within your OWN domain! If you DO promote your blog posts 
 
 == Description ==
 
-The plugin creates a shorter link for every blog post, so instead of `http://kovshenin.com/wordpress/plugins/twitter-friendly-links/` you can use `http://kovshenin.com/712`. Sweet, huh? Here's a video presentation: [Video: Twitter Friendly Links for WordPress](http://kovshenin.com/archives/video-twitter-friendly-links-for-wordpress/ "Twitter Friendly Links for WordPress)
+The plugin creates a shorter link for every blog post, so instead of `http://kovshenin.com/wordpress/plugins/twitter-friendly-links/` you can use `http://kovshenin.com/712`. Sweet, huh? Here's a video presentation: [Twitter Friendly Links for WordPress](http://kovshenin.com/archives/video-twitter-friendly-links-for-wordpress/ "Twitter Friendly Links for WordPress")
 
 * Easy to setup and configure
 * Switch between 302 (temporary) and 301 (permanent) redirection
