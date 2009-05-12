@@ -2,9 +2,9 @@
 /*
 Plugin Name: Twitter Friendly Links
 Plugin URI: http://kovshenin.com/wordpress/plugins/twitter-friendly-links/
-Description: Your own TinyURL within your own domain name! Automatic shortlinks for your posts and pages.
+Description: Twitter Friendly Links
 Author: Konstantin Kovshenin
-Version: 0.3
+Version: 0.3.1
 Author URI: http://kovshenin.com/
 
 */
@@ -19,7 +19,7 @@ function twitter_friendly_links_activate() {
 	
 	// Default plugin options
 	$defaults = array(
-		"style" => "go",		// default style is example.com/go123
+		"style" => "",		// default style is example.com/123
 		"redirect" => 302,		// temporary redirect by default
 		"pages_enabled" => "",	// pages disabled by default
 	);
@@ -38,9 +38,9 @@ function twitter_friendly_links() {
 	$pages_enabled = ($options["pages_enabled"] == "checked") ? true : false;
 	
 	$uri = $_SERVER["REQUEST_URI"];
-	$siteurl = get_option("siteurl");
-	$siteurl = str_replace("http://".$_SERVER["SERVER_NAME"], "", $siteurl);
-	$uri = str_replace($siteurl, "", $uri);
+	$home = get_option("home");
+	$home = str_replace("http://".$_SERVER["SERVER_NAME"], "", $home);
+	$uri = str_replace($home, "", $uri);
 	if (ereg("^/{$style}([0-9]+)$", $uri, $regs))
 	{
 		$post_id = $regs[1];
@@ -122,7 +122,7 @@ function twitter_friendly_links_options() {
 			<th scope="row"><label for="style">Links style</label></th>
 			<td>
 				<input type="text"  value="<?=$style;?>" id="style" name="style"/>
-				<span class="setting-description"><?= get_option("siteurl"); ?>/<strong><?=$style;?></strong>123</span>
+				<span class="setting-description"><?= get_option("home"); ?>/<strong><?=$style;?></strong>123</span>
 			</td>
 		</tr>
 		<tr valign="top">
@@ -259,12 +259,9 @@ function twitter_friendly_links_inner_box($post) {
 		return;
 	}
 	
-	$options = get_option("twitter_friendly_links");
-	$style = $options["style"];
-	
 	$post_id = $post->ID;
 	
-	$friendly_link = get_option("siteurl") . "/" . $style . $post_id;
+	$friendly_link = twitter_link($post_id);
 	$title_length = utf8_strlen($post->post_title);
 	$link_length = utf8_strlen($friendly_link);
 	$overall_length = $title_length + $link_length;
@@ -303,7 +300,7 @@ function twitter_link($id = 0) {
 	else
 		$post_id = $id;
 	
-	$friendly_link = get_option("siteurl") . "/" . $style . $post_id;
+	$friendly_link = get_option("home") . "/" . $style . $post_id;
 	
 	return $friendly_link;
 }
