@@ -190,10 +190,11 @@ function twitter_friendly_links_options() {
 
 	<div class="clear"></div>
 </div>
-<table class="widefat fixed">
+</div>
+<table class="widefat post fixed">
 	<thead>
 		<tr>
-			<th class="manage-column column-name" id="title" scope="col" style="width: 2em;">&nbsp;</th>
+			<th class="manage-column column-name" id="title" scope="col" style="width: 3em;">&nbsp;</th>
 			<th class="manage-column column-name" id="title" scope="col">Title</th>
 			<th class="manage-column column-name" id="twitterlink" scope="col" style="width: 25em;">Friendly Link</th>
 		</tr>
