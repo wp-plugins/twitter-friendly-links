@@ -22,11 +22,35 @@ jQuery(document).ready(function(){
 		jQuery("#twitter_links_displaying_total").html(TwitterFriendly.total_pages);
 		return false;
 	});
+	
+	jQuery(".twitter_friendly.first").click(function(){
+		jQuery(".twitter_friendly.page-numbers:first").click();
+		return false;
+	});
+	
+	jQuery(".twitter_friendly.last").click(function(){
+		jQuery(".twitter_friendly.page-numbers:last").click();
+		return false;
+	});
 		
 	jQuery(".twitter_friendly.page-numbers").click(function(){
 		var page = this.innerHTML;
 		jQuery(".twitter_friendly.page-numbers").removeClass("current");		
 		jQuery(this).addClass("current");
+		
+		jQuery(".twitter_friendly.page-numbers").hide();
+		
+		jQuery(this).show();
+		jQuery(".twitter_friendly.page-numbers.post" + (parseInt(page)+1) ).show();
+		jQuery(".twitter_friendly.page-numbers.post" + (parseInt(page)+2) ).show();
+		jQuery(".twitter_friendly.page-numbers.post" + (parseInt(page)-1) ).show();
+		jQuery(".twitter_friendly.page-numbers.post" + (parseInt(page)-2) ).show();
+		
+		if (page < 5)
+		{
+			jQuery(".twitter_friendly.page-numbers.firstpages").show();
+		}
+				
 		jQuery("#twitter_links_table_body").fadeTo("fast", 0.01, function(){
 			jQuery(this).load(TwitterFriendly.plugin_url + "/ajax/nav.php?" + TwitterFriendly.viewing + "&page=" + page , null, function(){
 				jQuery("#twitter_links_displaying").html(((page-1)*15+1) + "-" + (page*15));

@@ -4,15 +4,26 @@ Plugin Name: Twitter Friendly Links
 Plugin URI: http://kovshenin.com/wordpress/plugins/twitter-friendly-links/
 Description: Twitter Friendly Links
 Author: Konstantin Kovshenin
-Version: 0.3.1
+Version: 0.3.2
 Author URI: http://kovshenin.com/
 
 */
 
-register_activation_hook(__FILE__, 'twitter_friendly_links_activate' );
-add_action('template_redirect', 'twitter_friendly_links');
-add_action("admin_menu", "twitter_friendly_links_menu");
-add_action("admin_menu", "twitter_friendly_links_box");
+add_action("init", "twitter_friendly_links_init");
+
+function twitter_friendly_links_init() {
+	register_activation_hook(__FILE__, 'twitter_friendly_links_activate' );
+	add_action('template_redirect', 'twitter_friendly_links');
+	add_action("admin_menu", "twitter_friendly_links_menu");
+	add_action("admin_menu", "twitter_friendly_links_box");
+	
+	$options = get_option("twitter_friendly_links");
+	
+	// Fix for the Twitter Tools plugin
+	$twitter_tools_fix = ($options["twitter_tools_fix"] == "checked") ? true : false;
+	if ($twitter_tools_fix)
+		add_filter("tweet_blog_post_url", "permalink_to_twitter_link", 10, 1);
+}
 
 function twitter_friendly_links_activate() {
 	$options = get_option("twitter_friendly_links");
@@ -22,6 +33,7 @@ function twitter_friendly_links_activate() {
 		"style" => "",		// default style is example.com/123
 		"redirect" => 302,		// temporary redirect by default
 		"pages_enabled" => "",	// pages disabled by default
+		"twitter_tools_fix" => "", // disabled by deafult
 	);
 	
 	foreach($defaults as $key => $default_value)
@@ -100,12 +112,14 @@ function twitter_friendly_links_options() {
 		$options["style"] = $_POST["style"];
 		$options["redirect"] = $_POST["redirect"];
 		$options["pages_enabled"] = $_POST["pages_enabled"];
+		$options["twitter_tools_fix"] = $_POST["twitter_tools_fix"];
 		update_option("twitter_friendly_links", $options);
 	}
 	
 	$style = $options["style"];
 	$redirect = $options["redirect"];
 	$pages_enabled = $options["pages_enabled"];
+	$twitter_tools_fix = $options["twitter_tools_fix"];
 	
 	$selected[$redirect] = " selected=\"selected\"";
 	
@@ -142,6 +156,13 @@ function twitter_friendly_links_options() {
 				<span class="setting-description">The style for pages will be the same as for posts</span>
 			</td>
 		</tr>
+		<tr valign="top">
+			<th scope="row"><label for="twitter_tools_fix">Twitter Tools plugin fix</label></th>
+			<td>
+				<input type="checkbox" value="checked" <?=$twitter_tools_fix;?> id="twitter_tools_fix" name="twitter_tools_fix"/>
+				<span class="setting-description">Linking fix for the <a href="http://wordpress.org/extend/plugins/twitter-tools/">Twitter Tools</a> plugin. Described <a href="http://kovshenin.com/archives/compatibility-twitter-tools-twitter-friendly-links/">here</a></span>
+			</td>
+		</tr>
 	</tbody>
 	</table>
 	<p class="submit">
@@ -168,16 +189,22 @@ function twitter_friendly_links_options() {
 	</div>
 	
 	<div class="tablenav-pages"><span class="displaying-num">Displaying <span id="twitter_links_displaying">1-15</span> of <span id="twitter_links_displaying_total"><?=$total_posts;?></span></span>
-	<a href="#" class="twitter_friendly page-numbers current">1</a>
+	<a href="#" class="twitter_friendly first">First</a>
+	<a href="#" class="twitter_friendly page-numbers post1 current">1</a>
 	<span class="twitter_friendly posts-numbers">
 <?php
 	$pages = $total_posts / 15;
-	for ($i = 2; $i <= $pages; $i++)
+	for ($i = 2; $i <= 50; $i++)
 	{
-		echo '<a href="#" class="twitter_friendly page-numbers">'.$i.'</a> ';
+		if ($i > 5) { $display = 'style="display: none"'; $firstpages = ""; }
+		else { $display = ""; $firstpages = " firstpages"; }
+		
+		echo '<a href="#" class="twitter_friendly page-numbers'.$firstpages.' post'.$i.'" '.$display.'>'.$i.'</a> ';
 	}
 ?>
 	</span>
+	<a href="#" class="twitter_friendly last">Last</a>
+	
 	<span class="twitter_friendly pages-numbers" style="display: none">
 <?php
 	$pages = $total_pages / 15;
@@ -189,8 +216,9 @@ function twitter_friendly_links_options() {
 	</span>
 
 	<div class="clear"></div>
+	</div>
 </div>
-</div>
+
 <table class="widefat post fixed">
 	<thead>
 		<tr>
@@ -226,7 +254,7 @@ function twitter_friendly_links_options() {
 ?>
 	</tbody>
 </table>
-</div>
+
 <?
 }
 
@@ -303,5 +331,14 @@ function twitter_link($id = 0) {
 	
 	$friendly_link = get_option("home") . "/" . $style . $post_id;
 	
+	return $friendly_link;
+}
+
+function permalink_to_twitter_link($permalink)
+{
+	$options = get_option("twitter_friendly_links");
+	$style = $options["style"];
+	$post_id = url_to_postid($permalink);
+	$friendly_link = get_option("home") . "/" . $style . $post_id;
 	return $friendly_link;
 }
