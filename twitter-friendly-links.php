@@ -194,7 +194,7 @@ function twitter_friendly_links_options() {
 	<span class="twitter_friendly posts-numbers">
 <?php
 	$pages = $total_posts / 15;
-	for ($i = 2; $i <= 50; $i++)
+	for ($i = 2; $i <= $pages; $i++)
 	{
 		if ($i > 5) { $display = 'style="display: none"'; $firstpages = ""; }
 		else { $display = ""; $firstpages = " firstpages"; }
