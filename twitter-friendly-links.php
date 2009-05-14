@@ -4,7 +4,7 @@ Plugin Name: Twitter Friendly Links
 Plugin URI: http://kovshenin.com/wordpress/plugins/twitter-friendly-links/
 Description: Twitter Friendly Links
 Author: Konstantin Kovshenin
-Version: 0.3.2
+Version: 0.3.3
 Author URI: http://kovshenin.com/
 
 */
@@ -53,7 +53,7 @@ function twitter_friendly_links() {
 	$home = get_option("home");
 	$home = str_replace("http://".$_SERVER["SERVER_NAME"], "", $home);
 	$uri = str_replace($home, "", $uri);
-	if (ereg("^/{$style}([0-9]+)$", $uri, $regs))
+	if (ereg("^/{$style}([0-9]+)/?$", $uri, $regs))
 	{
 		$post_id = $regs[1];
 		$post = new WP_Query("p=$post_id");
