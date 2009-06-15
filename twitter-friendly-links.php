@@ -4,7 +4,7 @@ Plugin Name: Twitter Friendly Links
 Plugin URI: http://kovshenin.com/wordpress/plugins/twitter-friendly-links/
 Description: Twitter Friendly Links
 Author: Konstantin Kovshenin
-Version: 0.3.4
+Version: 0.3.5
 Author URI: http://kovshenin.com/
 
 */
@@ -19,11 +19,14 @@ function twitter_friendly_links_init() {
 	
 	$options = get_option("twitter_friendly_links");
 	
-	// Fix for the Twitter Tools plugin
+	// Fix for the Twitter Tools & Tweet This plugins
 	$twitter_tools_fix = ($options["twitter_tools_fix"] == "checked") ? true : false;
+	$tweet_this_fix = ($options["tweet_this_fix"] == "checked") ? true : false;
 	
 	if ($twitter_tools_fix)
 		add_filter("tweet_blog_post_url", "permalink_to_twitter_link", 10, 1);
+	if ($tweet_this_fix)
+		add_filter("the_content", "tweet_this_fix", 10);
 	
 	// Link relations options
 	$html_shortlink_rel = ($options["html_shortlink_rel"] == "checked") ? true : false;
@@ -44,6 +47,7 @@ function twitter_friendly_links_activate() {
 		"pages_enabled" => "",	// pages disabled by default
 		"twitter_tools_fix" => "", // disabled by deafult
 		"askapache_google_404" => "",
+		"tweet_this_fix" => "",
 		
 		"html_shortlink_rel" => "",
 		"http_shortlink_rel" => "",
@@ -173,6 +177,7 @@ function twitter_friendly_links_options() {
 		$options["pages_enabled"] = $_POST["pages_enabled"];
 		$options["twitter_tools_fix"] = $_POST["twitter_tools_fix"];
 		$options["askapache_google_404"] = $_POST["askapache_google_404"];
+		$options["tweet_this_fix"] = $_POST["tweet_this_fix"];
 		
 		$options["html_shortlink_rel"] = $_POST["html_shortlink_rel"];
 		$options["http_shortlink_rel"] = $_POST["http_shortlink_rel"];
@@ -187,6 +192,7 @@ function twitter_friendly_links_options() {
 	$pages_enabled = $options["pages_enabled"];
 	$twitter_tools_fix = $options["twitter_tools_fix"];
 	$askapache_google_404 = $options["askapache_google_404"];
+	$tweet_this_fix = $options["tweet_this_fix"];
 	
 	$html_shortlink_rel = $options["html_shortlink_rel"];
 	$http_shortlink_rel = $options["http_shortlink_rel"];
@@ -276,6 +282,13 @@ function twitter_friendly_links_options() {
 			<td>
 				<input type="checkbox" value="checked" <?=$twitter_tools_fix;?> id="twitter_tools_fix" name="twitter_tools_fix"/>
 				<span class="setting-description">Linking fix for the <a href="http://wordpress.org/extend/plugins/twitter-tools/">Twitter Tools</a> plugin. Described <a href="http://kovshenin.com/archives/compatibility-twitter-tools-twitter-friendly-links/">here</a></span>
+			</td>
+		</tr>
+		<tr valign="top">
+			<th scope="row"><label for="tweet_this_fix">Tweet-This plugin fix</label></th>
+			<td>
+				<input type="checkbox" value="checked" <?=$tweet_this_fix;?> id="tweet_this_fix" name="tweet_this_fix"/>
+				<span class="setting-description">Linking fix for the <a href="http://wordpress.org/extend/plugins/tweet-this/">Tweet This</a> plugin.</span>
 			</td>
 		</tr>
 		<tr valign="top">
@@ -464,4 +477,10 @@ function permalink_to_twitter_link($permalink)
 	$post_id = url_to_postid($permalink);
 	$friendly_link = get_option("home") . "/" . $style . $post_id;
 	return $friendly_link;
+}
+
+function tweet_this_fix($content) {
+	$twitter_link = twitter_link();
+	$content = preg_replace("/href=\\\"http:\/\/twitter.com\/home\/\?status=([^\\\"]+)\\\"/", "href=\"http://twitter.com/home/?status=" . urlencode(get_the_title() . " " . $twitter_link) . "\"", $content);
+	return $content;
 }
