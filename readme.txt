@@ -4,7 +4,7 @@ Donate link: http://kovshenin.com/wordpress/plugins/twitter-friendly-links/
 Tags: links, twitter, short, url, socialmedia, permalinks, redirect, trim, identi.ca, microblogging, shorturl, canonical
 Requires at least: 1.5
 Tested up to: 2.8
-Stable tag: 0.3.5
+Stable tag: 0.3.6
 
 Your very own TinyURL within your OWN domain! If you DO promote your blog posts in Twitter, then you MUST make your links look cool!
 
@@ -21,6 +21,7 @@ The plugin creates a shorter link for every blog post, so instead of `http://kov
 * Compatible with Twitter Tools, Tweet This and AskApache Google 404 plugins
 * Compatible with WordPress MU
 * Configurable linking relations (HTML and HTTP) for rel=shortlink, rel=canonical and rev=canonical
+* Super easy tracking with Google Analytics! Destination links are Taggable!
 * More coming up soon!
 
 YES, I do consider feature requests, and that is what makes this plugin work. The discussions go here: [Twitter Friendly Links](http://kovshenin.com/wordpress/plugins/twitter-friendly-links/ "Twitter Friendly Links")
@@ -50,6 +51,9 @@ Yes you do. TinyURL links give backlinks to TinyURL.com, while short links gener
 3. The edit post form
 
 == Change log ==
+
+= 0.3.6 =
+* Destination links now taggable for easy Google Analytics Tracking.
 
 = 0.3.5 =
 * Compatible with Tweet This plugin

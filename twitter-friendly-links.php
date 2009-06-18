@@ -4,7 +4,7 @@ Plugin Name: Twitter Friendly Links
 Plugin URI: http://kovshenin.com/wordpress/plugins/twitter-friendly-links/
 Description: Twitter Friendly Links
 Author: Konstantin Kovshenin
-Version: 0.3.5
+Version: 0.3.6
 Author URI: http://kovshenin.com/
 
 */
@@ -48,6 +48,8 @@ function twitter_friendly_links_activate() {
 		"twitter_tools_fix" => "", // disabled by deafult
 		"askapache_google_404" => "",
 		"tweet_this_fix" => "",
+		
+		"ga_tracking" => "",
 		
 		"html_shortlink_rel" => "",
 		"http_shortlink_rel" => "",
@@ -93,6 +95,7 @@ function twitter_friendly_links() {
 	$style = $options["style"];
 	$redirect = $options["redirect"];
 	$pages_enabled = ($options["pages_enabled"] == "checked") ? true : false;
+	$ga_tracking = (strlen($options["ga_tracking"]) > 1) ? "?".$options["ga_tracking"] : "";
 	
 	$uri = $_SERVER["REQUEST_URI"];
 	$home = get_option("home");
@@ -118,7 +121,7 @@ function twitter_friendly_links() {
 			elseif ($redirect == 302)
 				header("HTTP/1.1 302 Found");
 
-			header("Location: ".get_permalink());
+			header("Location: ".get_permalink().$ga_tracking);
 		}
 		elseif ($pages_enabled)
 		{
@@ -131,7 +134,7 @@ function twitter_friendly_links() {
 				elseif ($redirect == 302)
 					header("HTTP/1.1 302 Found");
 					
-				header("Location: ".get_permalink());
+				header("Location: ".get_permalink().$ga_tracking);
 			}
 		}
 	}
@@ -179,6 +182,8 @@ function twitter_friendly_links_options() {
 		$options["askapache_google_404"] = $_POST["askapache_google_404"];
 		$options["tweet_this_fix"] = $_POST["tweet_this_fix"];
 		
+		$options["ga_tracking"] = $_POST["ga_tracking"];
+		
 		$options["html_shortlink_rel"] = $_POST["html_shortlink_rel"];
 		$options["http_shortlink_rel"] = $_POST["http_shortlink_rel"];
 		$options["rel_canonical"] = $_POST["rel_canonical"];
@@ -193,6 +198,8 @@ function twitter_friendly_links_options() {
 	$twitter_tools_fix = $options["twitter_tools_fix"];
 	$askapache_google_404 = $options["askapache_google_404"];
 	$tweet_this_fix = $options["tweet_this_fix"];
+	
+	$ga_tracking = $options["ga_tracking"];
 	
 	$html_shortlink_rel = $options["html_shortlink_rel"];
 	$http_shortlink_rel = $options["http_shortlink_rel"];
@@ -232,6 +239,13 @@ function twitter_friendly_links_options() {
 			<td>
 				<input type="checkbox" value="checked" <?=$pages_enabled;?> id="pages_enabled" name="pages_enabled"/>
 				<span class="setting-description">The style for pages will be the same as for posts</span>
+			</td>
+		</tr>
+		<tr valign="top">
+			<th scope="row"><label for="style">Tag destination links</label></th>
+			<td>
+				<input type="text" style="min-width:25em;" value="<?=$ga_tracking;?>" id="ga_tracking" name="ga_tracking" /><br />
+				<span class="setting-description">You can tag your destination links for Google Analytics Tracking. For example: <code>utm_source=twitter&amp;utm_medium=shortlink&amp;utm_campaign=shotlinks</code>. You can generate a tagged link using the <a href="https://www.google.com/support/googleanalytics/bin/answer.py?hl=en&answer=55578">Google Analytics URL Builder</a>. Do not include the website address in the input box above. Start from utm_source. This string will be appended to the destination address. Leave blank to disable. This is still beta ;)</span>
 			</td>
 		</tr>
 	</tbody>
