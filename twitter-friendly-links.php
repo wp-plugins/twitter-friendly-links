@@ -245,7 +245,7 @@ function twitter_friendly_links_options() {
 			<th scope="row"><label for="style">Tag destination links</label></th>
 			<td>
 				<input type="text" style="min-width:25em;" value="<?=$ga_tracking;?>" id="ga_tracking" name="ga_tracking" /><br />
-				<span class="setting-description">You can tag your destination links for Google Analytics Tracking. For example: <code>utm_source=twitter&amp;utm_medium=shortlink&amp;utm_campaign=shotlinks</code>. You can generate a tagged link using the <a href="https://www.google.com/support/googleanalytics/bin/answer.py?hl=en&answer=55578">Google Analytics URL Builder</a>. Do not include the website address in the input box above. Start from utm_source. This string will be appended to the destination address. Leave blank to disable. This is still beta ;)</span>
+				<span class="setting-description">You can tag your destination links for Google Analytics Tracking. For example: <code>utm_source=twitter&amp;utm_medium=shortlink&amp;utm_campaign=shortlinks</code>. You can generate a tagged link using the <a href="https://www.google.com/support/googleanalytics/bin/answer.py?hl=en&answer=55578">Google Analytics URL Builder</a>. Do not include the website address in the input box above. Start from utm_source. This string will be appended to the destination address. Leave blank to disable. This is still beta ;)</span>
 			</td>
 		</tr>
 	</tbody>
