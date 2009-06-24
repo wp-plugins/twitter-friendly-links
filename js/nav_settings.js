@@ -6,6 +6,7 @@ jQuery(document).ready(function(){
 		jQuery(this).attr("style", "font-weight: bold");
 		TwitterFriendly.viewing = "posts";
 		jQuery(".twitter_friendly.pages-numbers").hide();
+		jQuery(".twitter_friendly.attachments-numbers").hide();
 		jQuery(".twitter_friendly.posts-numbers").show();
 		jQuery(".twitter_friendly.page-numbers:first").click();
 		jQuery("#twitter_links_displaying_total").html(TwitterFriendly.total_posts);
@@ -17,11 +18,25 @@ jQuery(document).ready(function(){
 		jQuery(this).attr("style", "font-weight: bold");
 		TwitterFriendly.viewing = "pages";
 		jQuery(".twitter_friendly.posts-numbers").hide();
+		jQuery(".twitter_friendly.attachments-numbers").hide();
 		jQuery(".twitter_friendly.pages-numbers").show();
 		jQuery(".twitter_friendly.page-numbers:first").click();
 		jQuery("#twitter_links_displaying_total").html(TwitterFriendly.total_pages);
 		return false;
 	});
+
+	jQuery("#twitter_links_attachments").click(function(){
+		jQuery(".twitter_links_postpage").attr("style", "");
+		jQuery(this).attr("style", "font-weight: bold");
+		TwitterFriendly.viewing = "attachments";
+		jQuery(".twitter_friendly.pages-numbers").hide();
+		jQuery(".twitter_friendly.posts-numbers").hide();
+		jQuery(".twitter_friendly.attachments-numbers").show();
+		jQuery(".twitter_friendly.page-numbers:first").click();
+		jQuery("#twitter_links_displaying_total").html(TwitterFriendly.total_attachments);
+		return false;
+	});
+
 	
 	jQuery(".twitter_friendly.first").click(function(){
 		jQuery(".twitter_friendly.page-numbers:first").click();

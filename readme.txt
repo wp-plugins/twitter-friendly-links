@@ -1,10 +1,10 @@
 === Twitter Friendly Links ===
 Contributors: kovshenin
 Donate link: http://kovshenin.com/wordpress/plugins/twitter-friendly-links/
-Tags: links, twitter, short, url, socialmedia, permalinks, redirect, trim, identi.ca, microblogging
-Requires at least: 2.7
-Tested up to: 2.7.1
-Stable tag: 0.3.3
+Tags: links, twitter, short, url, socialmedia, permalinks, redirect, trim, identi.ca, microblogging, shorturl, canonical
+Requires at least: 2.0
+Tested up to: 2.8
+Stable tag: 0.3.7
 
 Your very own TinyURL within your OWN domain! If you DO promote your blog posts in Twitter, then you MUST make your links look cool!
 
@@ -14,12 +14,14 @@ The plugin creates a shorter link for every blog post, so instead of `http://kov
 
 * Easy to setup and configure
 * Switch between 302 (temporary) and 301 (permanent) redirection
-* Lists all your posts/pages with short links to each
+* Lists all your posts/pages/attachments with short links to each
 * Shows the short link in the edit post/page form together with the text you can tweet out (trimmed to 140 characters) and a link to Twitter with the predefined text
 * You can output the twitter friendly link in your themes using the `twitter_link()` function
 * New function available: `permalink_to_twitter_link()` which takes a permalink as an argument and returns a Twitter Friendly Link (if exists)
-* Fully compatible with the Twitter Tools plugin!
+* Compatible with Sociable, Twitter Tools, Tweet This and AskApache Google 404 plugins
 * Compatible with WordPress MU
+* Configurable linking relations (HTML and HTTP) for rel=shortlink, rel=canonical and rev=canonical
+* Super easy tracking with Google Analytics! Destination links are Taggable!
 * More coming up soon!
 
 YES, I do consider feature requests, and that is what makes this plugin work. The discussions go here: [Twitter Friendly Links](http://kovshenin.com/wordpress/plugins/twitter-friendly-links/ "Twitter Friendly Links")
@@ -30,6 +32,7 @@ YES, I do consider feature requests, and that is what makes this plugin work. Th
 1. Activate the plugin through the 'Plugins' menu in WordPress
 1. Take a look at Twitter Friendly Links in the Settings section of your Admin panel
 1. Make sure you enable Permalinks (Settings: Permalinks), otherwise this plugin will not work
+1. If you're using any plugins mentioned in the Compatibility section in the Settings page, make sure you check the ones you're using to activate the fixes.
 
 == Frequently Asked Questions ==
 
@@ -48,6 +51,23 @@ Yes you do. TinyURL links give backlinks to TinyURL.com, while short links gener
 3. The edit post form
 
 == Change log ==
+
+= 0.3.7 =
+* Compatible with the Sociable plugin
+* Added attachments shortlink support
+* Enable shortlinks for posts/pages/attachments now in configuration
+
+= 0.3.6 =
+* Destination links now taggable for easy Google Analytics Tracking.
+
+= 0.3.5 =
+* Compatible with Tweet This plugin
+* WordPress 2.8, 1.5 compatibility checked
+
+= 0.3.4 =
+* Now compatible with AskApache Google 404 plugin
+* Link relations (rel=shortlink, rel=canonical, rev=canonical)
+* Some script optimization (wp_post_count)
 
 = 0.3.3 =
 * Now compatible with WordPress MU (subdomain and subdirectory blogs)
