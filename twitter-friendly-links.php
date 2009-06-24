@@ -2,9 +2,9 @@
 /*
 Plugin Name: Twitter Friendly Links
 Plugin URI: http://kovshenin.com/wordpress/plugins/twitter-friendly-links/
-Description: Twitter Friendly Links
+Description: Your very own TinyURL within your OWN domain! If you DO promote your blog posts in Twitter, then you MUST make your links look cool!
 Author: Konstantin Kovshenin
-Version: 0.3.6
+Version: 0.3.7
 Author URI: http://kovshenin.com/
 
 */
@@ -12,7 +12,6 @@ Author URI: http://kovshenin.com/
 add_action("init", "twitter_friendly_links_init", 9);
 
 function twitter_friendly_links_init() {
-	register_activation_hook(__FILE__, 'twitter_friendly_links_activate');
 	add_action('template_redirect', 'twitter_friendly_links', 9);
 	add_action("admin_menu", "twitter_friendly_links_menu");
 	add_action("admin_menu", "twitter_friendly_links_box");
@@ -22,11 +21,14 @@ function twitter_friendly_links_init() {
 	// Fix for the Twitter Tools & Tweet This plugins
 	$twitter_tools_fix = ($options["twitter_tools_fix"] == "checked") ? true : false;
 	$tweet_this_fix = ($options["tweet_this_fix"] == "checked") ? true : false;
+	$sociable_fix = ($options["sociable_fix"] == "checked") ? true : false;
 	
 	if ($twitter_tools_fix)
 		add_filter("tweet_blog_post_url", "permalink_to_twitter_link", 10, 1);
 	if ($tweet_this_fix)
-		add_filter("the_content", "tweet_this_fix", 10);
+		add_filter("the_content", "tfl_tweet_this_fix", 10);
+	if ($sociable_fix)
+		add_filter("sociable_link", "tfl_sociable_fix");
 	
 	// Link relations options
 	$html_shortlink_rel = ($options["html_shortlink_rel"] == "checked") ? true : false;
@@ -35,40 +37,25 @@ function twitter_friendly_links_init() {
 	
 	if ($html_shortlink_rel || $rel_canonical || $rev_canonical)
 		add_action("wp_head", "twitter_friendly_links_relations");
-}
+		
+	// Notice about core changes
+	if ($options["tfl_core_notice"] == 1 && !isset($_GET["tfl_hide"]))
+		add_action("admin_notices", "tfl_admin_notices_core");
 
-function twitter_friendly_links_activate() {
-	$options = get_option("twitter_friendly_links");
-	
-	// Default plugin options
-	$defaults = array(
-		"style" => "",		// default style is example.com/123
-		"redirect" => 302,		// temporary redirect by default
-		"pages_enabled" => "",	// pages disabled by default
-		"twitter_tools_fix" => "", // disabled by deafult
-		"askapache_google_404" => "",
-		"tweet_this_fix" => "",
-		
-		"ga_tracking" => "",
-		
-		"html_shortlink_rel" => "",
-		"http_shortlink_rel" => "",
-		"rel_canonical" => "",
-		"rev_canonical" => "",
-	);
-	
-	foreach($defaults as $key => $default_value)
-		$options[$key] = (!isset($options[$key])) ? $default_value : $options[$key];
-	
-	update_option("twitter_friendly_links", $options);
+	// Notify the administrator if permalinks are switched off
+	$permalink_structure = (isset($_POST['permalink_structure'])) ? $_POST['permalink_structure'] : get_option("permalink_structure");
+	if ($permalink_structure == "")
+		add_action("admin_notices", "tfl_admin_notices");
 }
 
 function twitter_friendly_links_relations()
 {
 	$options = get_option("twitter_friendly_links");
+	$posts_enabled = ($options["posts_enabled"] == "checked") ? true : false;
 	$pages_enabled = ($options["pages_enabled"] == "checked") ? true : false;
+	$attachments_enabled = ($options["attachments_enabled"] == "checked") ? true : false;
 	
-	if (is_single() || ($pages_enabled && is_page()))
+	if (($posts_enabled && is_single()) || ($pages_enabled && is_page()) || ($attachments_enabled && is_attachment()))
 	{
 		$options = get_option("twitter_friendly_links");
 		$html_shortlink_rel = ($options["html_shortlink_rel"] == "checked") ? true : false;
@@ -94,7 +81,10 @@ function twitter_friendly_links() {
 	
 	$style = $options["style"];
 	$redirect = $options["redirect"];
+	$posts_enabled = ($options["posts_enabled"] == "checked") ? true : false;
 	$pages_enabled = ($options["pages_enabled"] == "checked") ? true : false;
+	$attachments_enabled = ($options["attachments_enabled"] == "checked") ? true : false;
+	
 	$ga_tracking = (strlen($options["ga_tracking"]) > 1) ? "?".$options["ga_tracking"] : "";
 	
 	$uri = $_SERVER["REQUEST_URI"];
@@ -112,30 +102,23 @@ function twitter_friendly_links() {
 		}
 		
 		$post_id = $regs[1];
-		$post = new WP_Query("p=$post_id");
-		if ($post->have_posts())
+
+		$posts = new WP_Query("p=$post_id&post_type=any");
+		if ($posts->have_posts())
 		{
-			$post->the_post();
+			$posts->the_post();
+			$post = $posts->post;
+			
+			if (!$posts_enabled && $post->post_type == "post") return;
+			if (!$pages_enabled && $post->post_type == "page") return;
+			if (!$attachments_enabled && $post->post_type == "attachment") return;
+			
 			if ($redirect == 301)
 				header("HTTP/1.1 301 Moved Permanently");
 			elseif ($redirect == 302)
 				header("HTTP/1.1 302 Found");
 
 			header("Location: ".get_permalink().$ga_tracking);
-		}
-		elseif ($pages_enabled)
-		{
-			$post = new WP_Query("page_id=$post_id"); // Search thru pages
-			if ($post->have_posts())
-			{
-				$post->the_post();
-				if ($redirect == 301)
-					header("HTTP/1.1 301 Moved Permanently");
-				elseif ($redirect == 302)
-					header("HTTP/1.1 302 Found");
-					
-				header("Location: ".get_permalink().$ga_tracking);
-			}
 		}
 	}
 	else
@@ -145,7 +128,7 @@ function twitter_friendly_links() {
 		// Link relations
 		$http_shortlink_rel = ($options["http_shortlink_rel"] == "checked") ? true : false;
 		if ($http_shortlink_rel)
-			if (is_single() || ($pages_enabled && is_page()))
+			if (($posts_enabled && is_single()) || ($pages_enabled && is_page()) || ($attachments_enabled && is_attachment()))
 				header("Link: <" . twitter_link($post_id) . ">; rel=shortlink");
 	}
 }
@@ -155,13 +138,16 @@ function twitter_friendly_links_admin_scripts() {
 	$total_posts = $count_posts->publish;
 	$count_pages = wp_count_posts('page');
 	$total_pages = $count_pages->publish;
+	$count_attachments = wp_count_posts('attachment');
+	$total_attachments = $count_attachments->inherit;
 
 	$plugin_url = trailingslashit(get_bloginfo('wpurl')).PLUGINDIR.'/'. dirname(plugin_basename(__FILE__));
 	wp_enqueue_script('twitterfriendly_navsettings', $plugin_url.'/js/nav_settings.js', array('jquery'));
 	wp_localize_script('twitterfriendly_navsettings', 'TwitterFriendly', array(
 		"plugin_url" => $plugin_url,
 		"total_posts" => $total_posts,
-		"total_pages" => $total_pages,		
+		"total_pages" => $total_pages,
+		"total_attachments" => $total_attachments,		
 	));
 }
 
@@ -173,14 +159,24 @@ function twitter_friendly_links_menu() {
 function twitter_friendly_links_options() {
 	$options = get_option("twitter_friendly_links");
 	
+	if (isset($_GET["tfl_hide"]))
+	{
+		$options["tfl_core_notice"] = 0;
+		update_option("twitter_friendly_links", $options);
+	}
+	
 	if (isset($_POST["twitter-friendly-links-submit"]))
 	{
 		$options["style"] = $_POST["style"];
 		$options["redirect"] = $_POST["redirect"];
+		$options["posts_enabled"] = $_POST["posts_enabled"];
 		$options["pages_enabled"] = $_POST["pages_enabled"];
+		$options["attachments_enabled"] = $_POST["attachments_enabled"];
+		
 		$options["twitter_tools_fix"] = $_POST["twitter_tools_fix"];
 		$options["askapache_google_404"] = $_POST["askapache_google_404"];
 		$options["tweet_this_fix"] = $_POST["tweet_this_fix"];
+		$options["sociable_fix"] = $_POST["sociable_fix"];
 		
 		$options["ga_tracking"] = $_POST["ga_tracking"];
 		
@@ -194,10 +190,14 @@ function twitter_friendly_links_options() {
 	
 	$style = $options["style"];
 	$redirect = $options["redirect"];
+	$posts_enabled = $options["posts_enabled"];
 	$pages_enabled = $options["pages_enabled"];
+	$attachments_enabled = $options["attachments_enabled"];
+	
 	$twitter_tools_fix = $options["twitter_tools_fix"];
 	$askapache_google_404 = $options["askapache_google_404"];
 	$tweet_this_fix = $options["tweet_this_fix"];
+	$sociable_fix = $options["sociable_fix"];
 	
 	$ga_tracking = $options["ga_tracking"];
 	
@@ -218,10 +218,23 @@ function twitter_friendly_links_options() {
 	<table class="form-table" style="margin-bottom:10px;">
 	<tbody>
 		<tr valign="top">
-			<th scope="row"><label for="style">Links style</label></th>
+			<th scope="row"><label for="style">Shortlinks format (prefix)</label></th>
 			<td>
 				<input type="text"  value="<?=$style;?>" id="style" name="style"/>
 				<span class="setting-description"><?= get_option("home"); ?>/<strong><?=$style;?></strong>123</span>
+			</td>
+		</tr>
+		<tr valign="top">
+			<th scope="row"><label>Enable shortlinks for</label></th>
+			<td>
+				<input type="checkbox" value="checked" <?=$posts_enabled;?> id="posts_enabled" name="posts_enabled"/>
+				<span class="setting-description">Posts<br /></span>
+
+				<input type="checkbox" value="checked" <?=$pages_enabled;?> id="pages_enabled" name="pages_enabled"/>
+				<span class="setting-description">Pages<br /></span>
+				
+				<input type="checkbox" value="checked" <?=$attachments_enabled;?> id="attachments_enabled" name="attachments_enabled"/>
+				<span class="setting-description">Attachments</span>
 			</td>
 		</tr>
 		<tr valign="top">
@@ -232,13 +245,6 @@ function twitter_friendly_links_options() {
 					<option value="301"<?=$selected[301];?>>301 Moved Permanently</option>
 				</select>
 				<span class="setting-description">302 by default</span>
-			</td>
-		</tr>
-		<tr valign="top">
-			<th scope="row"><label for="pages_enabled">Enable shortlinks for pages</label></th>
-			<td>
-				<input type="checkbox" value="checked" <?=$pages_enabled;?> id="pages_enabled" name="pages_enabled"/>
-				<span class="setting-description">The style for pages will be the same as for posts</span>
 			</td>
 		</tr>
 		<tr valign="top">
@@ -292,24 +298,31 @@ function twitter_friendly_links_options() {
 	<table class="form-table">
 	<tbody>
 		<tr valign="top">
-			<th scope="row"><label for="twitter_tools_fix">Twitter Tools plugin fix</label></th>
+			<th scope="row"><label for="twitter_tools_fix">Twitter Tools</label></th>
 			<td>
 				<input type="checkbox" value="checked" <?=$twitter_tools_fix;?> id="twitter_tools_fix" name="twitter_tools_fix"/>
 				<span class="setting-description">Linking fix for the <a href="http://wordpress.org/extend/plugins/twitter-tools/">Twitter Tools</a> plugin. Described <a href="http://kovshenin.com/archives/compatibility-twitter-tools-twitter-friendly-links/">here</a></span>
 			</td>
 		</tr>
 		<tr valign="top">
-			<th scope="row"><label for="tweet_this_fix">Tweet-This plugin fix</label></th>
+			<th scope="row"><label for="tweet_this_fix">Tweet-This</label></th>
 			<td>
 				<input type="checkbox" value="checked" <?=$tweet_this_fix;?> id="tweet_this_fix" name="tweet_this_fix"/>
 				<span class="setting-description">Linking fix for the <a href="http://wordpress.org/extend/plugins/tweet-this/">Tweet This</a> plugin.</span>
 			</td>
 		</tr>
 		<tr valign="top">
-			<th scope="row"><label for="askapache_google_404">AskApache Google 404 fix</label></th>
+			<th scope="row"><label for="askapache_google_404">AskApache Google 404</label></th>
 			<td>
 				<input type="checkbox" value="checked" <?=$askapache_google_404;?> id="askapache_google_404" name="askapache_google_404"/>
 				<span class="setting-description">Fix for the <a href="http://wordpress.org/extend/plugins/askapache-google-404/">AskApache Google 404</a> plugin.</span>
+			</td>
+		</tr>
+		<tr valign="top">
+			<th scope="row"><label for="sociable">Sociable</label></th>
+			<td>
+				<input type="checkbox" value="checked" <?=$sociable_fix;?> id="sociable_fix" name="sociable_fix"/>
+				<span class="setting-description">Fix for the <a href="http://wordpress.org/extend/plugins/sociable/">Sociable</a> plugin.</span>
 			</td>
 		</tr>
 	</tbody>
@@ -325,15 +338,26 @@ function twitter_friendly_links_options() {
 	$total_posts = $count_posts->publish;
 	$count_pages = wp_count_posts('page');
 	$total_pages = $count_pages->publish;
+	$count_attachments = wp_count_posts('attachment');
+	$total_attachments = $count_attachments->inherit;
 ?>
 <div class="tablenav">
 	<div class="alignleft actions">
-		<a href="#" id="twitter_links_posts" class="twitter_links_postpage" style="font-weight: bold;">Posts</a> / 
 <?php
-	if ($pages_enabled == "checked")
-		echo '<a href="#" id="twitter_links_pages" class="twitter_links_postpage">Pages</a>';
+	if ($posts_enabled == "checked")
+		echo '<a href="#" id="twitter_links_posts" class="twitter_links_postpage" style="font-weight: bold;">Posts</a> / ';
 	else
-		echo '<a href="#" id="twitter_links_pages"></a>Pages (disabled)';
+		echo '<a href="#" id="twitter_links_posts"></a>Posts (disabled) / ';
+	 
+	if ($pages_enabled == "checked")
+		echo '<a href="#" id="twitter_links_pages" class="twitter_links_postpage">Pages</a> / ';
+	else
+		echo '<a href="#" id="twitter_links_pages"></a>Pages (disabled) / ';
+		
+	if ($attachments_enabled == "checked")
+		echo '<a href="#" id="twitter_links_attachments" class="twitter_links_postpage">Attachments</a>';
+	else
+		echo '<a href="#" id="twitter_links_attachments"></a>Attachments (disabled)';
 ?>
 	
 	</div>
@@ -364,6 +388,15 @@ function twitter_friendly_links_options() {
 	}
 ?>
 	</span>
+	<span class="twitter_friendly attachments-numbers" style="display: none">
+<?php
+	$pages = $total_attachments / 15;
+	for ($i = 2; $i <= $pages; $i++)
+	{
+		echo '<a href="#" class="twitter_friendly page-numbers">'.$i.'</a> ';
+	}
+?>
+	</span>
 
 	<div class="clear"></div>
 	</div>
@@ -385,14 +418,27 @@ function twitter_friendly_links_options() {
 		</tr>
 	</tfoot>
 	<tbody id="twitter_links_table_body">
-<?
-	$query = new WP_Query("posts_per_page=15");
-	$i = 0;
-	while ($query->have_posts())
+<?php
+	if ($posts_enabled != "checked")
 	{
-		$query->the_post();
-		$friendly_link = twitter_link($query->post->ID);
-		$i++;
+?>
+			<tr class="alternate">
+				<td style="text-align: right"></td>
+				<td>Posts are disabled</td>
+				<td></td>
+			</tr>
+<?php
+	}
+	else
+	{
+
+		$query = new WP_Query("posts_per_page=15");
+		$i = 0;
+		while ($query->have_posts())
+		{
+			$query->the_post();
+			$friendly_link = twitter_link($query->post->ID);
+			$i++;
 ?>
 			<tr class="alternate">
 				<td style="text-align: right"><?=$i;?>.</td>
@@ -400,6 +446,7 @@ function twitter_friendly_links_options() {
 				<td><a href="<?= $friendly_link;?>"><?= $friendly_link; ?></a></td>
 			</tr>
 <?
+		}
 	}
 ?>
 	</tbody>
@@ -493,8 +540,65 @@ function permalink_to_twitter_link($permalink)
 	return $friendly_link;
 }
 
-function tweet_this_fix($content) {
+function tfl_tweet_this_fix($content) {
+	global $post;
 	$twitter_link = twitter_link();
-	$content = preg_replace("/href=\\\"http:\/\/twitter.com\/home\/\?status=([^\\\"]+)\\\"/", "href=\"http://twitter.com/home/?status=" . urlencode(get_the_title() . " " . $twitter_link) . "\"", $content);
+	$content = preg_replace("/href=\\\"http:\/\/twitter.com\/home\/?\?status=([^\\\"]+)\\\"/", "href=\"http://twitter.com/home/?status=" . urlencode($post->post_title . " " . $twitter_link) . "\"", $content);
 	return $content;
+}
+
+function tfl_sociable_fix($content) {
+	global $post;
+	$twitter_link = twitter_link();
+	$content = preg_replace("/href=\\\"http:\/\/twitter.com\/home\/?\?status=([^\\\"]+)\\\"/", "href=\"http://twitter.com/home/?status=" . urlencode($post->post_title . " " . $twitter_link) . "\"", $content);
+	return $content;
+}
+
+function tfl_admin_notices() {
+	echo "<div id='tfl-warning' class='updated fade'><p>You have to <a href='options-permalink.php'>change your permalink structure</a> for <strong>Twitter Friendly Links</strong> to work (don't use default).</p></div>";
+}
+
+function tfl_admin_notices_core() {
+	echo "<div id='tfl-warning' class='updated fade'><p>Hey, this version of <strong>Twitter Friendly Links</strong> had some core changes. Make sure you double check <a href='options-general.php?page=twitter-friendly-links/twitter-friendly-links.php'>your settings</a>, which may have not been saved from your previous version, okay? Sorry for any inconvenience caused. <a href='options-general.php?page=twitter-friendly-links/twitter-friendly-links.php&tfl_hide'>Hide this message</a>.</p></div>";
+}
+
+register_activation_hook(__FILE__, 'tfl_activate');
+register_deactivation_hook(__FILE__, 'tfl_deactivate');
+
+function tfl_deactivate() {
+	//delete_option("twitter_friendly_links"); // Use this only for debug
+	return true;
+}
+
+function tfl_activate() {
+	$options = get_option("twitter_friendly_links");
+	
+	// Default plugin options
+	$defaults = array(
+		"style" => "",		// default style is example.com/123
+		"redirect" => 302,		// temporary redirect by default
+		"posts_enabled" => "checked", // posts enabled by default
+		"pages_enabled" => "",	// pages disabled by default
+		"attachments_enabled" => "", // attachments disabled by default
+		
+		"twitter_tools_fix" => "", // disabled by deafult
+		"askapache_google_404" => "",
+		"tweet_this_fix" => "",
+		"sociable_fix" => "",
+		
+		"ga_tracking" => "",
+		
+		"html_shortlink_rel" => "",
+		"http_shortlink_rel" => "",
+		"rel_canonical" => "",
+		"rev_canonical" => "",
+		
+		"tfl_core_notice" => 1,
+	);
+	
+	foreach($defaults as $key => $default_value)
+		$options[$key] = (!isset($options[$key])) ? $default_value : $options[$key];
+		
+	update_option("twitter_friendly_links", $options);
+	return true;
 }

@@ -3,9 +3,23 @@
 	
 	if (current_user_can('level_10'))
 	{
-		$type = isset($_GET["pages"]) ? "page" : "post";
-		$query = new WP_Query("paged=".$_GET["page"]."&posts_per_page=15&post_type=$type");
+		$status = "";
+		
+		if (isset($_GET["pages"]))
+			$type = "page";
+		elseif (isset($_GET["attachments"]))
+		{
+			$type = "attachment";
+			$status = "&post_status=inherit";
+		}
+		else
+			$type = "post";
+			
+		//$type = isset($_GET["pages"]) ? "page" : "post";
+		
+		$query = new WP_Query("paged=".$_GET["page"]."&posts_per_page=15&post_type=$type".$status);
 		$i = (intval($_GET["page"])-1)*15;
+		//echo "</table><pre>" . print_r($query, true) . "</pre>";
 		while ($query->have_posts())
 		{
 			$i++;
