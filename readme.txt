@@ -4,7 +4,7 @@ Donate link: http://kovshenin.com/wordpress/plugins/twitter-friendly-links/
 Tags: links, twitter, short, url, socialmedia, permalinks, redirect, trim, identi.ca, microblogging, shorturl, canonical
 Requires at least: 2.0
 Tested up to: 2.8
-Stable tag: 0.3.7
+Stable tag: 0.3.8
 
 Your very own TinyURL within your OWN domain! If you DO promote your blog posts in Twitter, then you MUST make your links look cool!
 
@@ -51,6 +51,9 @@ Yes you do. TinyURL links give backlinks to TinyURL.com, while short links gener
 3. The edit post form
 
 == Change log ==
+
+= 0.3.8 =
+* Licensed under GPL v3
 
 = 0.3.7 =
 * Compatible with the Sociable plugin
