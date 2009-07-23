@@ -4,9 +4,27 @@ Plugin Name: Twitter Friendly Links
 Plugin URI: http://kovshenin.com/wordpress/plugins/twitter-friendly-links/
 Description: Your very own TinyURL within your OWN domain! If you DO promote your blog posts in Twitter, then you MUST make your links look cool!
 Author: Konstantin Kovshenin
-Version: 0.3.7
+Version: 0.3.8
 Author URI: http://kovshenin.com/
 
+	License
+
+    Quick Flickr Widget
+    Copyright (C) 2009 Konstantin Kovshenin (kovshenin@live.com)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    
 */
 
 add_action("init", "twitter_friendly_links_init", 9);
