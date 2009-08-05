@@ -52,7 +52,7 @@ Yes you do. TinyURL links give backlinks to TinyURL.com, while short links gener
 
 == Change log ==
 
-= 0.4
+= 0.4 =
 * Code cleanup
 * SexyBookmarks plugin fix
 * WordPress 2.8.3 compatibility test
