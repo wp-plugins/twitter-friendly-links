@@ -22,7 +22,7 @@ The plugin creates a shorter link for every blog post, so instead of `http://kov
 * Compatible with WordPress MU and BuddyPress
 * Configurable linking relations (HTML and HTTP) for rel=shortlink, and rel=canonical
 * Super easy tracking with Google Analytics! Destination links are Taggable!
-* You can now switch to alphanumeric links for sexy links with numbers and letters like http://example.com/s2e7
+* You can now switch to alphanumeric links for sexy links with numbers and letters like example.com/s2e7
 * More coming up soon!
 
 YES, I do consider feature requests, and that is what makes this plugin work. The discussions go here: [Twitter Friendly Links](http://kovshenin.com/wordpress/plugins/twitter-friendly-links/ "Twitter Friendly Links")
