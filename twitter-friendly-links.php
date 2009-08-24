@@ -117,7 +117,7 @@ function twitter_friendly_links() {
 		}
 		
 		$post_id = $regs[1];
-		if ($format = "base32")
+		if ($format == "base32")
 			$post_id = tfl_base32($post_id, true);
 
 		$posts = new WP_Query("p=$post_id&post_type=any");
