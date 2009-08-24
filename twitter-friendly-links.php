@@ -4,9 +4,27 @@ Plugin Name: Twitter Friendly Links
 Plugin URI: http://kovshenin.com/wordpress/plugins/twitter-friendly-links/
 Description: Your very own TinyURL within your OWN domain! If you DO promote your blog posts in Twitter, then you MUST make your links look cool!
 Author: Konstantin Kovshenin
-Version: 0.3.7
+Version: 0.4.1
 Author URI: http://kovshenin.com/
 
+	License
+
+    Twitter Friendly Links
+    Copyright (C) 2009 Konstantin Kovshenin (kovshenin@live.com)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    
 */
 
 add_action("init", "twitter_friendly_links_init", 9);
@@ -33,9 +51,8 @@ function twitter_friendly_links_init() {
 	// Link relations options
 	$html_shortlink_rel = ($options["html_shortlink_rel"] == "checked") ? true : false;
 	$rel_canonical = ($options["rel_canonical"] == "checked") ? true : false;
-	$rev_canonical = ($options["rev_canonical"] == "checked") ? true : false;
 	
-	if ($html_shortlink_rel || $rel_canonical || $rev_canonical)
+	if ($html_shortlink_rel || $rel_canonical)
 		add_action("wp_head", "twitter_friendly_links_relations");
 		
 	// Notice about core changes
@@ -60,7 +77,6 @@ function twitter_friendly_links_relations()
 		$options = get_option("twitter_friendly_links");
 		$html_shortlink_rel = ($options["html_shortlink_rel"] == "checked") ? true : false;
 		$rel_canonical = ($options["rel_canonical"] == "checked") ? true : false;
-		$rev_canonical = ($options["rev_canonical"] == "checked") ? true : false;
 		
 		global $post;
 		$post_id = $post->ID;
@@ -69,8 +85,6 @@ function twitter_friendly_links_relations()
 		
 		if ($html_shortlink_rel)
 			echo "<link rel=\"shortlink\" href=\"$short_url\" />\n";
-		if ($rev_canonical)
-			echo "<link rev=\"canonical\" href=\"$short_url\" />\n";
 		if ($rel_canonical)
 			echo "<link rel=\"canonical\" href=\"$permalink\" />\n";
 	}
@@ -80,6 +94,7 @@ function twitter_friendly_links() {
 	$options = get_option("twitter_friendly_links");
 	
 	$style = $options["style"];
+	$format = $options["format"];
 	$redirect = $options["redirect"];
 	$posts_enabled = ($options["posts_enabled"] == "checked") ? true : false;
 	$pages_enabled = ($options["pages_enabled"] == "checked") ? true : false;
@@ -90,8 +105,8 @@ function twitter_friendly_links() {
 	$uri = $_SERVER["REQUEST_URI"];
 	$home = get_option("home");
 	$home = str_replace("http://".$_SERVER["SERVER_NAME"], "", $home);
-	$uri = str_replace($home, "", $uri);
-	if (ereg("^/{$style}([0-9]+)/?$", $uri, $regs))
+	$uri = strtolower(str_replace($home, "", $uri));
+	if (ereg("^/{$style}([0-9a-z]+)/?$", $uri, $regs))
 	{
 		// Fix for the AskApache Google 404 plugin
 		$askapache_google_404 = ($options["askapache_google_404"] == "checked") ? true : false;
@@ -102,6 +117,8 @@ function twitter_friendly_links() {
 		}
 		
 		$post_id = $regs[1];
+		if ($format = "base32")
+			$post_id = tfl_base32($post_id, true);
 
 		$posts = new WP_Query("p=$post_id&post_type=any");
 		if ($posts->have_posts())
@@ -168,6 +185,7 @@ function twitter_friendly_links_options() {
 	if (isset($_POST["twitter-friendly-links-submit"]))
 	{
 		$options["style"] = $_POST["style"];
+		$options["format"] = $_POST["format"];
 		$options["redirect"] = $_POST["redirect"];
 		$options["posts_enabled"] = $_POST["posts_enabled"];
 		$options["pages_enabled"] = $_POST["pages_enabled"];
@@ -183,12 +201,12 @@ function twitter_friendly_links_options() {
 		$options["html_shortlink_rel"] = $_POST["html_shortlink_rel"];
 		$options["http_shortlink_rel"] = $_POST["http_shortlink_rel"];
 		$options["rel_canonical"] = $_POST["rel_canonical"];
-		$options["rev_canonical"] = $_POST["rev_canonical"];
 		
 		update_option("twitter_friendly_links", $options);
 	}
 	
 	$style = $options["style"];
+	$format = $options["format"];
 	$redirect = $options["redirect"];
 	$posts_enabled = $options["posts_enabled"];
 	$pages_enabled = $options["pages_enabled"];
@@ -204,10 +222,12 @@ function twitter_friendly_links_options() {
 	$html_shortlink_rel = $options["html_shortlink_rel"];
 	$http_shortlink_rel = $options["http_shortlink_rel"];
 	$rel_canonical = $options["rel_canonical"];
-	$rev_canonical = $options["rev_canonical"];
 	
 	$selected[$redirect] = " selected=\"selected\"";
+	$selected[$format] = " selected=\"selected\"";
 	
+	if ($format == "generic") $link_preview = "123";
+	elseif ($format = "base32") $link_preview = "7e1";
 ?>
 <div class="wrap">
 <h2>Twitter Friendly Links</h2>
@@ -218,22 +238,32 @@ function twitter_friendly_links_options() {
 	<table class="form-table" style="margin-bottom:10px;">
 	<tbody>
 		<tr valign="top">
-			<th scope="row"><label for="style">Shortlinks format (prefix)</label></th>
+			<th scope="row"><label for="style">Shortlinks prefix</label></th>
 			<td>
-				<input type="text"  value="<?=$style;?>" id="style" name="style"/>
-				<span class="setting-description"><?= get_option("home"); ?>/<strong><?=$style;?></strong>123</span>
+				<input type="text"  value="<?php echo$style; ?>" id="style" name="style"/>
+				<span class="setting-description"><?php echo get_option("home"); ?>/<strong>prefix</strong><?php echo $link_preview; ?> (blank by default)</span>
+			</td>
+		</tr>
+		<tr valign="top">
+			<th scope="row"><label for="format">Format</label></th>
+			<td>
+				<select name="format" id="format">
+					<option value="generic"<?php echo $selected["generic"]; ?>>Generic (numbers only)</option>
+					<option value="base32"<?php echo $selected["base32"]; ?>>Alphanumeric (base32 encoded)</option>
+				</select>
+				<span class="setting-description">Generic by default</span>
 			</td>
 		</tr>
 		<tr valign="top">
 			<th scope="row"><label>Enable shortlinks for</label></th>
 			<td>
-				<input type="checkbox" value="checked" <?=$posts_enabled;?> id="posts_enabled" name="posts_enabled"/>
+				<input type="checkbox" value="checked" <?php echo $posts_enabled; ?> id="posts_enabled" name="posts_enabled"/>
 				<span class="setting-description">Posts<br /></span>
 
-				<input type="checkbox" value="checked" <?=$pages_enabled;?> id="pages_enabled" name="pages_enabled"/>
+				<input type="checkbox" value="checked" <?php echo $pages_enabled; ?> id="pages_enabled" name="pages_enabled"/>
 				<span class="setting-description">Pages<br /></span>
 				
-				<input type="checkbox" value="checked" <?=$attachments_enabled;?> id="attachments_enabled" name="attachments_enabled"/>
+				<input type="checkbox" value="checked" <?php echo $attachments_enabled; ?> id="attachments_enabled" name="attachments_enabled"/>
 				<span class="setting-description">Attachments</span>
 			</td>
 		</tr>
@@ -241,8 +271,8 @@ function twitter_friendly_links_options() {
 			<th scope="row"><label for="redirect">Redirection type</label></th>
 			<td>
 				<select name="redirect" id="redirect">
-					<option value="302"<?=$selected[302];?>>302 Found (Temporary redirect)</option>
-					<option value="301"<?=$selected[301];?>>301 Moved Permanently</option>
+					<option value="302"<?php echo $selected[302]; ?>>302 Found (Temporary redirect)</option>
+					<option value="301"<?php echo $selected[301]; ?>>301 Moved Permanently</option>
 				</select>
 				<span class="setting-description">302 by default</span>
 			</td>
@@ -250,44 +280,37 @@ function twitter_friendly_links_options() {
 		<tr valign="top">
 			<th scope="row"><label for="style">Tag destination links</label></th>
 			<td>
-				<input type="text" style="min-width:25em;" value="<?=$ga_tracking;?>" id="ga_tracking" name="ga_tracking" /><br />
-				<span class="setting-description">You can tag your destination links for Google Analytics Tracking. For example: <code>utm_source=twitter&amp;utm_medium=shortlink&amp;utm_campaign=shortlinks</code>. You can generate a tagged link using the <a href="https://www.google.com/support/googleanalytics/bin/answer.py?hl=en&answer=55578">Google Analytics URL Builder</a>. Do not include the website address in the input box above. Start from utm_source. This string will be appended to the destination address. Leave blank to disable. This is still beta ;)</span>
+				<input type="text" style="min-width:25em;" value="<?php echo $ga_tracking; ?>" id="ga_tracking" name="ga_tracking" /><br />
+				<span class="setting-description">You can tag your destination links for Google Analytics Tracking. For example: <code>utm_source=twitter&amp;utm_medium=shortlink&amp;utm_campaign=shortlinks</code>. You can generate a tagged link using the <a href="https://www.google.com/support/googleanalytics/bin/answer.py?hl=en&answer=55578">Google Analytics URL Builder</a>. Do not include the website address in the input box above. Start from utm_source. This string will be appended to the destination address. Leave blank to disable.</span>
 			</td>
 		</tr>
 	</tbody>
 	</table>
 
 <h3>Link Relations</h3>
-<p>Search engines and URL shorteners. Bunch of thoughts on linking relations, so here are the main options. A little note about Rev Canonical - <a href="http://www.mnot.net/blog/2009/04/14/rev_canonical_bad">it may hurt the web</a>, so use with caution.</p>
+<p>Search engines and URL shorteners. Bunch of thoughts on linking relations, so here are the main options.</p>
 
 	<table class="form-table" style="margin-bottom:10px;">
 	<tbody>
 		<tr valign="top">
 			<th scope="row"><label for="html_shortlink_rel">HTML Shortlink relation</label></th>
 			<td>
-				<input type="checkbox" value="checked" <?=$html_shortlink_rel;?> id="html_shortlink_rel" name="html_shortlink_rel" />
+				<input type="checkbox" value="checked" <?php echo $html_shortlink_rel; ?> id="html_shortlink_rel" name="html_shortlink_rel" />
 				<span class="setting-description">Adds a link rel=&quot;shortlink&quot; to the head section of your posts and (if enabled) pages. <a href="http://purl.org/net/shortlink">Specification</a>.</span>
 			</td>
 		</tr>
 		<tr valign="top">
 			<th scope="row"><label for="http_shortlink_rel">HTTP Shortlink relation</label></th>
 			<td>
-				<input type="checkbox" value="checked" <?=$http_shortlink_rel;?> id="http_shortlink_rel" name="http_shortlink_rel" />
+				<input type="checkbox" value="checked" <?php echo $http_shortlink_rel; ?> id="http_shortlink_rel" name="http_shortlink_rel" />
 				<span class="setting-description">Passes a link rel=&quot;shortlink&quot; along with the HTTP responses of your posts and (if enabled) pages. <a href="http://purl.org/net/shortlink">Specification</a>.</span>
 			</td>
 		</tr>
 		<tr valign="top">
 			<th scope="row"><label for="rel_canonical">Canonical relation</label></th>
 			<td>
-				<input type="checkbox" value="checked" <?=$rel_canonical;?> id="rel_canonical" name="rel_canonical" />
+				<input type="checkbox" value="checked" <?php echo $rel_canonical; ?> id="rel_canonical" name="rel_canonical" />
 				<span class="setting-description">Adds a link rel=&quot;canonical&quot; href=&quot;permalink&quot; to your HTML head in posts and (if enabled) pages.</span>
-			</td>
-		</tr>
-		<tr valign="top">
-			<th scope="row"><label for="rev_canonical">Canonical reverse relation</label></th>
-			<td>
-				<input type="checkbox" value="checked" <?=$rev_canonical;?> id="rev_canonical" name="rev_canonical" />
-				<span class="setting-description">Adds a link rev=&quot;canonical&quot; href=&quot;shortlink&quot; to your HTML head in posts and (if enabled) pages.</span>
 			</td>
 		</tr>
 	</tbody>
@@ -300,28 +323,28 @@ function twitter_friendly_links_options() {
 		<tr valign="top">
 			<th scope="row"><label for="twitter_tools_fix">Twitter Tools</label></th>
 			<td>
-				<input type="checkbox" value="checked" <?=$twitter_tools_fix;?> id="twitter_tools_fix" name="twitter_tools_fix"/>
+				<input type="checkbox" value="checked" <?php echo $twitter_tools_fix; ?> id="twitter_tools_fix" name="twitter_tools_fix"/>
 				<span class="setting-description">Linking fix for the <a href="http://wordpress.org/extend/plugins/twitter-tools/">Twitter Tools</a> plugin. Described <a href="http://kovshenin.com/archives/compatibility-twitter-tools-twitter-friendly-links/">here</a></span>
 			</td>
 		</tr>
 		<tr valign="top">
-			<th scope="row"><label for="tweet_this_fix">Tweet-This</label></th>
+			<th scope="row"><label for="tweet_this_fix">Tweet-This/SexyBookmarks</label></th>
 			<td>
-				<input type="checkbox" value="checked" <?=$tweet_this_fix;?> id="tweet_this_fix" name="tweet_this_fix"/>
-				<span class="setting-description">Linking fix for the <a href="http://wordpress.org/extend/plugins/tweet-this/">Tweet This</a> plugin.</span>
+				<input type="checkbox" value="checked" <?php echo $tweet_this_fix; ?> id="tweet_this_fix" name="tweet_this_fix"/>
+				<span class="setting-description">Linking fix for the <a href="http://wordpress.org/extend/plugins/tweet-this/">Tweet This</a> and <a href="http://sexybookmarks.net">SexyBookmarks</a> plugins.</span>
 			</td>
 		</tr>
 		<tr valign="top">
 			<th scope="row"><label for="askapache_google_404">AskApache Google 404</label></th>
 			<td>
-				<input type="checkbox" value="checked" <?=$askapache_google_404;?> id="askapache_google_404" name="askapache_google_404"/>
+				<input type="checkbox" value="checked" <?php echo $askapache_google_404; ?> id="askapache_google_404" name="askapache_google_404"/>
 				<span class="setting-description">Fix for the <a href="http://wordpress.org/extend/plugins/askapache-google-404/">AskApache Google 404</a> plugin.</span>
 			</td>
 		</tr>
 		<tr valign="top">
 			<th scope="row"><label for="sociable">Sociable</label></th>
 			<td>
-				<input type="checkbox" value="checked" <?=$sociable_fix;?> id="sociable_fix" name="sociable_fix"/>
+				<input type="checkbox" value="checked" <?php echo $sociable_fix; ?> id="sociable_fix" name="sociable_fix"/>
 				<span class="setting-description">Fix for the <a href="http://wordpress.org/extend/plugins/sociable/">Sociable</a> plugin.</span>
 			</td>
 		</tr>
@@ -362,7 +385,7 @@ function twitter_friendly_links_options() {
 	
 	</div>
 	
-	<div class="tablenav-pages"><span class="displaying-num">Displaying <span id="twitter_links_displaying">1-15</span> of <span id="twitter_links_displaying_total"><?=$total_posts;?></span></span>
+	<div class="tablenav-pages"><span class="displaying-num">Displaying <span id="twitter_links_displaying">1-15</span> of <span id="twitter_links_displaying_total"><?php echo $total_posts; ?></span></span>
 	<a href="#" class="twitter_friendly first">First</a>
 	<a href="#" class="twitter_friendly page-numbers post1 current">1</a>
 	<span class="twitter_friendly posts-numbers">
@@ -441,18 +464,18 @@ function twitter_friendly_links_options() {
 			$i++;
 ?>
 			<tr class="alternate">
-				<td style="text-align: right"><?=$i;?>.</td>
-				<td><a href="<? the_permalink(); ?>"><? the_title();?></a><br /></td>
-				<td><a href="<?= $friendly_link;?>"><?= $friendly_link; ?></a></td>
+				<td style="text-align: right"><?php echo $i; ?>.</td>
+				<td><a href="<?php the_permalink(); ?>"><? the_title();?></a><br /></td>
+				<td><a href="<?php echo $friendly_link; ?>"><?php echo $friendly_link; ?></a></td>
 			</tr>
-<?
+<?php
 		}
 	}
 ?>
 	</tbody>
 </table>
 
-<?
+<?php
 }
 
 function twitter_friendly_links_box() {
@@ -525,19 +548,19 @@ function twitter_link($id = 0) {
 	}
 	else
 		$post_id = $id;
-	
-	$friendly_link = get_option("home") . "/" . $style . $post_id;
+		
+	if ($options["format"] == "base32")
+		$friendly_link = get_option("home") . "/" . $style . tfl_base32($post_id);
+	else	
+		$friendly_link = get_option("home") . "/" . $style . $post_id;
 	
 	return $friendly_link;
 }
 
 function permalink_to_twitter_link($permalink)
 {
-	$options = get_option("twitter_friendly_links");
-	$style = $options["style"];
 	$post_id = url_to_postid($permalink);
-	$friendly_link = get_option("home") . "/" . $style . $post_id;
-	return $friendly_link;
+	return twitter_link($post_id);
 }
 
 function tfl_tweet_this_fix($content) {
@@ -576,6 +599,7 @@ function tfl_activate() {
 	// Default plugin options
 	$defaults = array(
 		"style" => "",		// default style is example.com/123
+		"format" => "generic", // default format is generic (numbers only)
 		"redirect" => 302,		// temporary redirect by default
 		"posts_enabled" => "checked", // posts enabled by default
 		"pages_enabled" => "",	// pages disabled by default
@@ -591,9 +615,8 @@ function tfl_activate() {
 		"html_shortlink_rel" => "",
 		"http_shortlink_rel" => "",
 		"rel_canonical" => "",
-		"rev_canonical" => "",
 		
-		"tfl_core_notice" => 1,
+		"tfl_core_notice" => 0,
 	);
 	
 	foreach($defaults as $key => $default_value)
@@ -602,3 +625,17 @@ function tfl_activate() {
 	update_option("twitter_friendly_links", $options);
 	return true;
 }
+
+function tfl_base32($str, $reverse = false) {
+	if (!$reverse)
+	{
+		$post_id = intval($str);
+		return base_convert($post_id + 10000, 10, 36);
+	}
+	else
+	{
+		$post_id = base_convert($str, 36, 10) - 10000;
+		return $post_id;
+	}
+}
+?>
