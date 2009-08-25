@@ -208,7 +208,7 @@ class TwitterFriendlyLinks {
 
 	function admin_menu_box() {
 		if (function_exists("add_meta_box")) {
-			add_meta_box("twitter_friendly_id", "Twitter Stuff", "twitter_friendly_links_inner_box", "post", "side");
+			add_meta_box("twitter_friendly_id", "Twitter Stuff", array(&$this, "admin_menu_inner_box"), "post", "side");
 			if ($this->settings["pages_enabled"]) add_meta_box("twitter_friendly_id", "Twitter Stuff", "twitter_friendly_links_inner_box", "page", "side");
 		}
 		else {
