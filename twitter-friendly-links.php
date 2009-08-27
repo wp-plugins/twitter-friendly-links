@@ -4,7 +4,7 @@ Plugin Name: Twitter Friendly Links
 Plugin URI: http://kovshenin.com/wordpress/plugins/twitter-friendly-links/
 Description: Your very own TinyURL within your OWN domain! If you DO promote your blog posts in Twitter, then you MUST make your links look cool!
 Author: Konstantin Kovshenin
-Version: 0.4.2
+Version: 0.4.3
 Author URI: http://kovshenin.com/
 
 	License
@@ -26,8 +26,11 @@ Author URI: http://kovshenin.com/
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     
 */
-global $tfl_version;
-$tfl_version = 42;
+global $tfl_version; // current version
+global $tfl_upgradeversion; // least version to upgrade
+
+$tfl_upgradeversion = 42;
+$tfl_version = 43;
 
 class TwitterFriendlyLinks {
 	var $settings = array();
@@ -209,7 +212,7 @@ class TwitterFriendlyLinks {
 	function admin_menu_box() {
 		if (function_exists("add_meta_box")) {
 			add_meta_box("twitter_friendly_id", "Twitter Stuff", array(&$this, "admin_menu_inner_box"), "post", "side");
-			if ($this->settings["pages_enabled"]) add_meta_box("twitter_friendly_id", "Twitter Stuff", "twitter_friendly_links_inner_box", "page", "side");
+			if ($this->settings["pages_enabled"]) add_meta_box("twitter_friendly_id", "Twitter Stuff", array(&$this, "admin_menu_inner_box"), "page", "side");
 		}
 		else {
 			add_action("dbx_post_advanced", array(&$this, "admin_menu_old_box"));
@@ -266,9 +269,11 @@ register_deactivation_hook(__FILE__, 'tfl_deactivate');
 
 function tfl_activate() {
 	global $tfl_version;
+	global $tfl_upgradeversion;
+	
 	$settings = (array) get_option("twitter_friendly_links");
 	
-	if ($settings["version"] < $tfl_version) 
+	if ($settings["version"] < $tfl_upgradeversion) 
 	{ // Upgrade ?
 	
 		if (isset($settings["format"]))
