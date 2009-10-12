@@ -53,6 +53,9 @@ Yes you do. TinyURL links give backlinks to TinyURL.com, while short links gener
 
 == Change log ==
 
+= 0.4.4 =
+* Added compatibility with the caching plugins that use the is_404 function, including W3 Total Cache.
+
 = 0.4.3 =
 * Fixed the "Twitter Stuff" bug in 0.4.2
 * Fixed the versioning issues. Upgrades are now smoother.

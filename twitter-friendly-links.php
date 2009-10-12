@@ -4,7 +4,7 @@ Plugin Name: Twitter Friendly Links
 Plugin URI: http://kovshenin.com/wordpress/plugins/twitter-friendly-links/
 Description: Your very own TinyURL within your OWN domain! If you DO promote your blog posts in Twitter, then you MUST make your links look cool!
 Author: Konstantin Kovshenin
-Version: 0.4.3
+Version: 0.4.4
 Author URI: http://kovshenin.com/
 
 	License
@@ -30,7 +30,7 @@ global $tfl_version; // current version
 global $tfl_upgradeversion; // least version to upgrade
 
 $tfl_upgradeversion = 42;
-$tfl_version = 43;
+$tfl_version = 44;
 
 class TwitterFriendlyLinks {
 	var $settings = array();
@@ -162,12 +162,10 @@ class TwitterFriendlyLinks {
 					if (!$this->settings["pages_enabled"] && $post->post_type == "page") return;
 					if (!$this->settings["attachments_enabled"] && $post->post_type == "attachment") return;
 					
-					if ($redirect == 301)
-						header("HTTP/1.1 301 Moved Permanently");
-					elseif ($redirect == 302)
-						header("HTTP/1.1 302 Found");
-		
-					header("Location: ".get_permalink().$ga_tracking);
+					global $wp_query;
+					$wp_query->is_404 = false;
+					
+					wp_redirect(get_permalink().$ga_tracking, $redirect);
 				}
 			}
 		}
