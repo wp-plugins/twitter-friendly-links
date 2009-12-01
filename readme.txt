@@ -4,7 +4,7 @@ Donate link: http://kovshenin.com/wordpress/plugins/twitter-friendly-links/
 Tags: links, twitter, short, url, socialmedia, permalinks, redirect, trim, identi.ca, microblogging, shorturl, canonical
 Requires at least: 2.0
 Tested up to: 2.8.4
-Stable tag: 0.4.3
+Stable tag: 0.4.5
 
 Your very own TinyURL within your OWN domain! If you DO promote your blog posts in Twitter, then you MUST make your links look cool!
 
@@ -23,6 +23,8 @@ The plugin creates a shorter link for every blog post, so instead of `http://kov
 * Configurable linking relations (HTML and HTTP) for rel=shortlink, and rel=canonical
 * Super easy tracking with Google Analytics! Destination links are Taggable!
 * You can now switch to alphanumeric links for sexy links with numbers and letters like example.com/s2e7
+* Caching with .htaccess option now available
+* Even shorter links with customizable shortlink base URL
 * More coming up soon!
 
 YES, I do consider feature requests, and that is what makes this plugin work. The discussions go here: [Twitter Friendly Links](http://kovshenin.com/wordpress/plugins/twitter-friendly-links/ "Twitter Friendly Links")
@@ -34,6 +36,7 @@ YES, I do consider feature requests, and that is what makes this plugin work. Th
 1. Take a look at Twitter Friendly Links in the Settings section of your Admin panel
 1. Make sure you enable Permalinks (Settings: Permalinks), otherwise this plugin will not work
 1. If you're using any plugins mentioned in the Compatibility section in the Settings page, make sure you check the ones you're using to activate the fixes.
+1. Your .htaccess file has to be writable all the time if you want to use caching with .htaccess
 
 == Frequently Asked Questions ==
 
@@ -52,6 +55,14 @@ Yes you do. TinyURL links give backlinks to TinyURL.com, while short links gener
 3. The edit post form
 
 == Change log ==
+
+= 0.4.5 =
+* Caching with .htaccess now available in beta (generic format only)
+* Custom shortlinks base URL for even shorter links
+* Minor bugfixes and code cleanup
+
+= 0.4.4 =
+* Added compatibility with the caching plugins that use the is_404 function, including W3 Total Cache.
 
 = 0.4.3 =
 * Fixed the "Twitter Stuff" bug in 0.4.2
