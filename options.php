@@ -1,10 +1,10 @@
 <?php
 	if (isset($_POST["twitter-friendly-links-submit"]))
 	{
-		
 		$this->settings["style"] = $_POST["style"];
 		$this->settings["format"] = $_POST["format"];
 		$this->settings["redirect"] = $_POST["redirect"];
+		$this->settings["shortlink_base"] = $_POST["shortlink_base"];
 		
 		$this->settings["posts_enabled"] = ($_POST["posts_enabled"] == "checked") ? true : false;
 		$this->settings["pages_enabled"] = ($_POST["pages_enabled"] == "checked") ? true : false;
@@ -21,12 +21,19 @@
 		$this->settings["http_shortlink_rel"] = ($_POST["http_shortlink_rel"] == "checked") ? true : false;
 		$this->settings["rel_canonical"] = ($_POST["rel_canonical"] == "checked") ? true : false;
 		
-		update_option("twitter_friendly_links", $this->settings);
+		$cache_in_htaccess_old = $this->settings["cache_in_htaccess"];
+		$this->settings["cache_in_htaccess"] = ($_POST["cache_in_htaccess"] == "checked") ? true : false;
+		
+		if ($this->settings["cache_in_htaccess"] != $cache_in_htaccess_old)
+			$this->settings["rewrite_rules_written"] = false;
+			
+		$this->save_settings();
 	}
 	
 	$style = $this->settings["style"];
 	$format = $this->settings["format"];
 	$redirect = $this->settings["redirect"];
+	$shortlink_base = $this->settings["shortlink_base"];
 	$posts_enabled = ($this->settings["posts_enabled"]) ? "checked" : "";
 	$pages_enabled = ($this->settings["pages_enabled"]) ? "checked" : "";
 	$attachments_enabled = ($this->settings["attachments_enabled"]) ? "checked" : "";
@@ -41,6 +48,8 @@
 	$html_shortlink_rel = ($this->settings["html_shortlink_rel"]) ? "checked" : "";
 	$http_shortlink_rel = ($this->settings["http_shortlink_rel"]) ? "checked" : "";
 	$rel_canonical = ($this->settings["rel_canonical"]) ? "checked" : "";
+	
+	$cache_in_htaccess = ($this->settings["cache_in_htaccess"]) ? "checked" : "";
 	
 	$selected[$redirect] = " selected=\"selected\"";
 	$selected[$format] = " selected=\"selected\"";
@@ -57,10 +66,17 @@
 	<table class="form-table" style="margin-bottom:10px;">
 	<tbody>
 		<tr valign="top">
+			<th scope="row"><label for="shortlink_base">Shortlink base URL</label></th>
+			<td>
+				<input type="text" value="<?php echo $shortlink_base; ?>" id="shortlink_base" name="shortlink_base" />
+				<span class="setting-description"><?php echo get_option("home"); ?> by default (read more about <a href="http://kovshenin.com/wordpress/plugins/twitter-friendly-links/#shorter">even shorter links</a>)</span>
+			</td>
+		</tr>
+		<tr valign="top">
 			<th scope="row"><label for="style">Shortlinks prefix</label></th>
 			<td>
-				<input type="text"  value="<?php echo$style; ?>" id="style" name="style"/>
-				<span class="setting-description"><?php echo get_option("home"); ?>/<strong>prefix</strong><?php echo $link_preview; ?> (blank by default)</span>
+				<input type="text"  value="<?php echo $style; ?>" id="style" name="style"/>
+				<span class="setting-description"><?php echo $shortlink_base; ?>/<strong>prefix</strong><?php echo $link_preview; ?> (blank by default)</span>
 			</td>
 		</tr>
 		<tr valign="top">
@@ -84,6 +100,13 @@
 				
 				<input type="checkbox" value="checked" <?php echo $attachments_enabled; ?> id="attachments_enabled" name="attachments_enabled"/>
 				<span class="setting-description">Attachments</span>
+			</td>
+		</tr>
+		<tr valign="top">
+			<th scope="row"><label for="cache_in_htaccess">.htaccess caching</label></th>
+			<td>
+				<input type="checkbox" value="checked" <?php echo $cache_in_htaccess; ?> id="cache_in_htaccess" name="cache_in_htaccess"/>
+				<span class="setting-description">Still in beta, works in Generic mode only. If this is turned on, new rewrite rules are applied to .htaccess on permalinks refresh (Settings - Permalinks) and on Post Save. P.S. This causes a 301 redirect.</span>
 			</td>
 		</tr>
 		<tr valign="top">
@@ -275,7 +298,7 @@
 	else
 	{
 
-		$query = new WP_Query("posts_per_page=15");
+		$query = new WP_Query("posts_per_page=15&post_type=post&post_status=publish");
 		$i = 0;
 		while ($query->have_posts())
 		{
